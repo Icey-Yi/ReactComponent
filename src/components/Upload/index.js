@@ -6,14 +6,26 @@ import UploadFileList from './UploadFileList';
 import styles from './index.less';
 
 class Upload extends Component {
+
+  static getDerivedStateFromProps(nextProps) {
+    if ('fileList' in nextProps && nextProps.listType !== 'picture-card') {
+      return {
+        fileList: [...nextProps.fileList] || [],
+      };
+    }
+    return null;
+  }
+
   constructor(props) {
     super(props);
     this.state = {
-      fileList: props.defaultFileList || [],
+      fileList: props.fileList || props.defaultFileList || [],
     }
   }
 
+
   onClick = e => {
+    e.stopPropagation();
     const el = this.fileInput;
     if (!el) {
       return;
@@ -69,9 +81,9 @@ class Upload extends Component {
     }
   };
 
-  beforeUpload = file => {
+  beforeUpload = (file, fileList) => {
     const { beforeUpload } = this.props;
-    const { fileList } = this.state;
+    //const { fileList } = this.state;
     if (!beforeUpload) {
       return true;
     }
@@ -191,63 +203,82 @@ class Upload extends Component {
 
   //删除文件
   deleteFile = (file, fileList) => e => {
+    e.stopPropagation();
     const newFileList = deleteFileItem(file, fileList);
-    this.onChange({ fileList: newFileList });
+    file.status = 'delete';
+    this.onChange({
+      file: { ...file },
+      fileList: newFileList
+    });
   };
+
+  //预览图片
+  onPreview = file => e =>{
+    e.stopPropagation();
+    const { onPreview } = this.props;
+    if(onPreview && (file.url || file.preview || file.originFileObj) ){
+      onPreview(file);
+    }
+  }
 
   render() {
     const { children, className, multiple, accept, disable, listType, showUploadList, progress } = this.props;
     const { fileList } = this.state;
-    if (listType === 'picture-card') {
-      return (
-        <div
-          className={classNames(className, styles.card)}
-          onClick={disable ? () => { } : this.onClick}
-          onDrop={disable ? () => { } : this.onFileDrop}
-          onDragOver={disable ? () => { } : this.onFileDrop}
-        >
-          <input
-            type='file'
-            ref={node => this.fileInput = node}
-            style={{ display: 'none' }}
-            onChange={this.handleChange}
-            multiple={multiple}
-            accept={accept}
-          />
-          {children}
-        </div>
-      )
-    }
+    console.log(fileList);
+    const cls = classNames({
+      [styles.btn]: true,
+      [styles.card]: listType === 'picture-card',
+      [className]: className,
+    });
+    const filecls = classNames({
+      [styles.fileList]: true,
+      [styles.cardWrap]: listType === 'picture-card',
+      [styles.listWrap]: listType === 'list',
+    })
 
     const renderUploadList = showUploadList === false ? "" :
-      <div className={styles.fileList}>
+      <div className={filecls}>
         <UploadFileList
           fileList={fileList}
           onDelte={this.deleteFile}
+          onPreview={this.onPreview}
           listType={listType}
           showUploadList={showUploadList}
           progress={progress} />
       </div>;
-      
+
+    const renderUploadButton = (
+      <div
+        className={cls}
+        onClick={disable ? () => { } : this.onClick}
+        onDrop={disable ? () => { } : this.onFileDrop}
+        onDragOver={disable ? () => { } : this.onFileDrop}
+      >
+        <input
+          type='file'
+          ref={node => this.fileInput = node}
+          style={{ display: 'none' }}
+          onChange={this.handleChange}
+          multiple={multiple}
+          accept={accept}
+        />
+        {children}
+      </div>);
+
+    if (listType === 'picture-card') {
+      return (
+        <span >
+          {renderUploadList}
+          {renderUploadButton}
+        </span>
+      )
+    }
+
     return (
-      <div >
-        <div
-          onClick={disable ? () => { } : this.onClick}
-          onDrop={disable ? () => { } : this.onFileDrop}
-          onDragOver={disable ? () => { } : this.onFileDrop}
-        >
-          <input
-            type='file'
-            ref={node => this.fileInput = node}
-            style={{ display: 'none' }}
-            onChange={this.handleChange}
-            multiple={multiple}
-            accept={accept}
-          />
-          {children}
-        </div>
+      <span >
+        {renderUploadButton}
         {renderUploadList}
-      </div>
+      </span>
     )
   }
 }
@@ -263,7 +294,6 @@ Upload.defaultProps = {
   withCredentials: false,
   disable: false,
   listType: 'text', //text,picture
-  defaultFileList: [],
   onChange: () => { },
   beforeUpload: () => { },
   onStart: () => { },
