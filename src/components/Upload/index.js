@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import classNames from 'classnames';
 import request from './request';
+import axiosRequest from '../../utils/axiosRequest';
 import { acceptFile, getUploadFile, deleteFileItem, getPostFiles, getFileItem } from './utils';
 import UploadFileList from './UploadFileList';
 import styles from './index.less';
@@ -76,8 +77,12 @@ class Upload extends Component {
       onProgress: this.onProgress,
       onError: this.onError,
     }
-    if (this.beforeUpload(file)) {
+    /*if (this.beforeUpload(file)) {
       request(requestOption);
+    }*/
+    if (this.beforeUpload(file)) {
+      const response = axiosRequest(requestOption);
+      response.then(res=>console.log(res)).catch(e=>console.log(e))
     }
   };
 

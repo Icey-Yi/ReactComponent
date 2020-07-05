@@ -227,7 +227,7 @@ class UploadDemo extends Component {
 
     return (
       <div className={styles.homeWrap}>
-        <Upload {...props}>
+        {/* <Upload {...props}>
           <Button><UploadOutlined /> Upload </Button>
         </Upload>
         <br />
@@ -284,7 +284,11 @@ class UploadDemo extends Component {
             onCancel={this.handleCancel}
           >
             <img alt="example" style={{ width: '100%' }} src={previewImage} />
-          </Modal>
+          </Modal>*/}
+        <Upload {...props}>
+          <Button><UploadOutlined /> Upload </Button>
+        </Upload>
+
       </div>
     )
   }
